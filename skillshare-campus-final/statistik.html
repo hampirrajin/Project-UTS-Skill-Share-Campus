@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Statistik | SkillShare Campus</title>
+
+  <!-- Bootstrap CSS (lewat CDN, tidak perlu instalasi) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- CSS tambahan milik kita -->
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- JavaScript bersama (data dan fungsi yang dipakai semua halaman) -->
+  <script src="js/script.js"></script>
+  <!-- Kalau belum login, otomatis dikirim ke halaman Login -->
+  <script>wajibLogin();</script>
+</head>
+
+<body>
+
+  <!-- ===== NAVBAR (sama di semua halaman setelah login) ===== -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="index.html">SKILLSHARE CAMPUS</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu-utama" aria-controls="menu-utama" aria-expanded="false" aria-label="Buka menu">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="menu-utama">
+        <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="index.html">Beranda</a></li>
+        <li class="nav-item"><a class="nav-link" href="kelas.html">Daftar Kelas</a></li>
+        <li class="nav-item"><a class="nav-link" href="tambah.html">Tambah Kelas</a></li>
+        <li class="nav-item"><a class="nav-link" href="tabel.html">Data Pendaftaran</a></li>
+        <li class="nav-item"><a class="nav-link active" href="statistik.html">Statistik</a></li>
+        <li class="nav-item"><a class="nav-link" href="peta.html">Peta</a></li>
+        </ul>
+        <span class="navbar-text me-3">Halo, <strong id="nama-user"></strong></span>
+        <button type="button" id="tombol-keluar" class="btn btn-light btn-sm">Keluar</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container py-4">
+    <!-- ===== HALAMAN STATISTIK (Anggota 5) ===== -->
+    <h1 class="h2 text-center">Statistik</h1>
+    <p class="text-center text-muted mb-4">Ringkasan kelas dan pendaftaran yang dihitung langsung dari data.</p>
+
+    <div class="row g-3 mb-4">
+      <div class="col-md-4">
+        <div class="card shadow-sm text-center">
+          <div class="card-body">
+            <div class="display-5 fw-bold text-primary" id="total-kelas">0</div>
+            <div class="text-muted">Total kelas</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card shadow-sm text-center">
+          <div class="card-body">
+            <div class="display-5 fw-bold text-primary" id="total-pendaftaran">0</div>
+            <div class="text-muted">Total pendaftaran</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card shadow-sm text-center">
+          <div class="card-body">
+            <div class="display-5 fw-bold text-primary" id="total-menunggu">0</div>
+            <div class="text-muted">Menunggu diterima</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="pesan-error" class="alert alert-warning" style="display: none"></div>
+
+    <div class="row g-4">
+      <div class="col-lg-7">
+        <div class="card shadow-sm"><div class="card-body">
+          <div id="grafik-kuota" style="height: 400px"></div>
+        </div></div>
+      </div>
+      <div class="col-lg-5">
+        <div class="card shadow-sm"><div class="card-body">
+          <div id="grafik-kategori" style="height: 400px"></div>
+        </div></div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="border-top bg-light text-center text-muted py-3 mt-5">
+    &copy; 2026 SkillShare Campus &middot; Proyek UTS Pemrograman Web
+  </footer>
+
+  <!-- Bootstrap JS (supaya tombol menu di layar kecil berfungsi) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/highcharts@13.1.1/highcharts.js"></script>
+
+  <!-- ===== JavaScript khusus halaman ini ===== -->
+  <script>
+    siapkanNavbar();
+
+    // 1) Hitung angka dari data
+    const semuaKelas = ambilKelas();
+    const namaKelas = [];          // nama tiap kelas
+    const kursiDiterima = [];      // jumlah Diterima tiap kelas
+    const kursiMenunggu = [];      // jumlah Menunggu tiap kelas
+    const kursiSisa = [];          // kursi masih kosong tiap kelas
+    let totalPendaftaran = 0;
+    let totalMenunggu = 0;
+    let pendaftarMusik = 0;
+    let pendaftarKomputer = 0;
+    let pendaftarKomunikasi = 0;
+
+    for (let i = 0; i < semuaKelas.length; i++) {
+      const k = semuaKelas[i];
+      const diterima = hitungPendaftar(k.id, 'Diterima');
+      const menunggu = hitungPendaftar(k.id, 'Menunggu');
+
+      namaKelas.push(k.nama);
+      kursiDiterima.push(diterima);
+      kursiMenunggu.push(menunggu);
+      kursiSisa.push(sisaKuota(k));
+      totalPendaftaran += diterima + menunggu;
+      totalMenunggu += menunggu;
+
+      if (k.kategori === 'Musik') pendaftarMusik += diterima + menunggu;
+      if (k.kategori === 'Komputer') pendaftarKomputer += diterima + menunggu;
+      if (k.kategori === 'Komunikasi') pendaftarKomunikasi += diterima + menunggu;
+    }
+
+    document.getElementById('total-kelas').textContent = semuaKelas.length;
+    document.getElementById('total-pendaftaran').textContent = totalPendaftaran;
+    document.getElementById('total-menunggu').textContent = totalMenunggu;
+
+    // 2) Gambar grafik dengan Highcharts
+    if (typeof Highcharts === 'undefined') {
+      tampilkanError('Grafik belum bisa dimuat. Cek koneksi internet, lalu muat ulang halaman.');
+    } else {
+      // Grafik 1: batang, status pendaftar dan sisa kursi tiap kelas
+      Highcharts.chart('grafik-kuota', {
+        chart: { type: 'bar' },
+        title: { text: 'Pendaftar dan Sisa Kursi per Kelas' },
+        xAxis: { categories: namaKelas },
+        yAxis: { min: 0, allowDecimals: false, title: { text: 'Jumlah kursi' } },
+        plotOptions: { series: { stacking: 'normal' } },
+        colors: ['#198754', '#FFC107', '#93C5FD'],
+        series: [
+          { name: 'Diterima', data: kursiDiterima },
+          { name: 'Menunggu', data: kursiMenunggu },
+          { name: 'Sisa kursi', data: kursiSisa }
+        ],
+        credits: { enabled: false }
+      });
+
+      // Grafik 2: lingkaran, jumlah pendaftar tiap kategori
+      Highcharts.chart('grafik-kategori', {
+        chart: { type: 'pie' },
+        title: { text: 'Pendaftar per Kategori' },
+        colors: ['#0B1B4D', '#2563EB', '#93C5FD'],
+        series: [{
+          name: 'Pendaftar',
+          data: [
+            { name: 'Musik', y: pendaftarMusik },
+            { name: 'Komputer', y: pendaftarKomputer },
+            { name: 'Komunikasi', y: pendaftarKomunikasi }
+          ]
+        }],
+        credits: { enabled: false }
+      });
+    }
+  </script>
+</body>
+</html>
