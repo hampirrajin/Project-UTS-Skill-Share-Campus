@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Daftar Kelas | SkillShare Campus</title>
+
+  <!-- Bootstrap CSS (lewat CDN, tidak perlu instalasi) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- CSS tambahan milik kita -->
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- JavaScript bersama (data dan fungsi yang dipakai semua halaman) -->
+  <script src="js/script.js"></script>
+  <!-- Kalau belum login, otomatis dikirim ke halaman Login -->
+  <script>wajibLogin();</script>
+</head>
+
+<body>
+
+  <!-- ===== NAVBAR (sama di semua halaman setelah login) ===== -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="index.html">SKILLSHARE CAMPUS</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu-utama" aria-controls="menu-utama" aria-expanded="false" aria-label="Buka menu">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="menu-utama">
+        <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="index.html">Beranda</a></li>
+        <li class="nav-item"><a class="nav-link active" href="kelas.html">Daftar Kelas</a></li>
+        <li class="nav-item"><a class="nav-link" href="tambah.html">Tambah Kelas</a></li>
+        <li class="nav-item"><a class="nav-link" href="tabel.html">Data Pendaftaran</a></li>
+        <li class="nav-item"><a class="nav-link" href="statistik.html">Statistik</a></li>
+        <li class="nav-item"><a class="nav-link" href="peta.html">Peta</a></li>
+        </ul>
+        <span class="navbar-text me-3">Halo, <strong id="nama-user"></strong></span>
+        <button type="button" id="tombol-keluar" class="btn btn-light btn-sm">Keluar</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container py-4">
+    <!-- ===== HALAMAN DAFTAR KELAS (Anggota 2) ===== -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h1 class="h2 mb-0">Daftar Kelas</h1>
+      <a href="tambah.html" class="btn btn-primary">+ Tambah Kelas</a>
+    </div>
+
+    <label for="cari" class="visually-hidden">Cari kelas</label>
+    <input type="search" id="cari" class="form-control mb-4" placeholder="Cari nama kelas atau pengajar">
+
+    <!-- 3 kolom: Kelas Musik, Kelas Komputer, Kelas Komunikasi. Kartu kelas diisi JavaScript di bawah. -->
+    <div class="row g-4">
+      <div class="col-md-4">
+        <h2 class="h4">🎸 Kelas Musik</h2>
+        <p class="small text-muted">Penanggung jawab: <span id="pj-musik"></span></p>
+        <div id="daftar-musik"></div>
+      </div>
+      <div class="col-md-4">
+        <h2 class="h4">💻 Kelas Komputer</h2>
+        <p class="small text-muted">Penanggung jawab: <span id="pj-komputer"></span></p>
+        <div id="daftar-komputer"></div>
+      </div>
+      <div class="col-md-4">
+        <h2 class="h4">🎤 Kelas Komunikasi</h2>
+        <p class="small text-muted">Penanggung jawab: <span id="pj-komunikasi"></span></p>
+        <div id="daftar-komunikasi"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="border-top bg-light text-center text-muted py-3 mt-5">
+    &copy; 2026 SkillShare Campus &middot; Proyek UTS Pemrograman Web
+  </footer>
+
+  <!-- Bootstrap JS (supaya tombol menu di layar kecil berfungsi) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- ===== JavaScript khusus halaman ini ===== -->
+  <script>
+    siapkanNavbar();
+
+    // Tulis nama dan CP penanggung jawab di bawah judul tiap kolom
+    document.getElementById('pj-musik').textContent = teksPJ('Musik');
+    document.getElementById('pj-komputer').textContent = teksPJ('Komputer');
+    document.getElementById('pj-komunikasi').textContent = teksPJ('Komunikasi');
+
+    // Membuat HTML satu kartu untuk satu kelas
+    function buatKartu(k) {
+      const sisa = sisaKuota(k);
+      let infoKursi = '<span class="badge bg-primary">Sisa ' + sisa + ' dari ' + k.kuota + ' kursi</span>';
+      if (sisa <= 0) {
+        infoKursi = '<span class="badge bg-danger">Kuota penuh</span>';
+      }
+
+      return `
+        <div class="card shadow-sm mb-3">
+          <div class="card-body">
+            <h3 class="h5 card-title">${esc(k.nama)}</h3>
+            <p class="card-text mb-1">Pengajar: ${esc(k.pengajar)}</p>
+            <p class="card-text mb-2">Jadwal: ${esc(k.jadwal)}</p>
+            <p>${infoKursi}</p>
+            <a href="detail.html?id=${k.id}" class="btn btn-primary btn-sm">Detail</a>
+          </div>
+        </div>`;
+    }
+
+    // Isi satu kolom dengan kelas-kelas dari satu kategori
+    function isiKolom(kategori, idKolom) {
+      const kata = document.getElementById('cari').value.trim().toLowerCase();
+      const semuaKelas = ambilKelas();
+      let html = '';
+
+      for (let i = 0; i < semuaKelas.length; i++) {
+        const k = semuaKelas[i];
+        const cocokKata = k.nama.toLowerCase().includes(kata) || k.pengajar.toLowerCase().includes(kata);
+        if (k.kategori === kategori && cocokKata) {
+          html += buatKartu(k);
+        }
+      }
+
+      if (html === '') {
+        html = '<p class="text-muted">Belum ada kelas.</p>';
+      }
+      document.getElementById(idKolom).innerHTML = html;
+    }
+
+    // Isi ketiga kolom
+    function tampilkanSemua() {
+      isiKolom('Musik', 'daftar-musik');
+      isiKolom('Komputer', 'daftar-komputer');
+      isiKolom('Komunikasi', 'daftar-komunikasi');
+    }
+
+    tampilkanSemua();
+    // Setiap kali kotak cari diketik, isi ulang
+    document.getElementById('cari').addEventListener('input', tampilkanSemua);
+  </script>
+</body>
+</html>

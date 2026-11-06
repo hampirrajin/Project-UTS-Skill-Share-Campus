@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Detail Kelas | SkillShare Campus</title>
+
+  <!-- Bootstrap CSS (lewat CDN, tidak perlu instalasi) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- CSS tambahan milik kita -->
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- JavaScript bersama (data dan fungsi yang dipakai semua halaman) -->
+  <script src="js/script.js"></script>
+  <!-- Kalau belum login, otomatis dikirim ke halaman Login -->
+  <script>wajibLogin();</script>
+</head>
+
+<body>
+
+  <!-- ===== NAVBAR (sama di semua halaman setelah login) ===== -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="index.html">SKILLSHARE CAMPUS</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu-utama" aria-controls="menu-utama" aria-expanded="false" aria-label="Buka menu">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="menu-utama">
+        <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="index.html">Beranda</a></li>
+        <li class="nav-item"><a class="nav-link active" href="kelas.html">Daftar Kelas</a></li>
+        <li class="nav-item"><a class="nav-link" href="tambah.html">Tambah Kelas</a></li>
+        <li class="nav-item"><a class="nav-link" href="tabel.html">Data Pendaftaran</a></li>
+        <li class="nav-item"><a class="nav-link" href="statistik.html">Statistik</a></li>
+        <li class="nav-item"><a class="nav-link" href="peta.html">Peta</a></li>
+        </ul>
+        <span class="navbar-text me-3">Halo, <strong id="nama-user"></strong></span>
+        <button type="button" id="tombol-keluar" class="btn btn-light btn-sm">Keluar</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container py-4">
+    <!-- ===== HALAMAN DETAIL KELAS (Anggota 3) ===== -->
+    <a href="kelas.html">&larr; Kembali ke Daftar Kelas</a>
+
+    <div class="row g-4 mt-1">
+      <div class="col-lg-8">
+        <div class="card shadow-sm">
+          <div class="card-body p-4">
+            <span class="badge bg-primary" id="detail-kategori"></span>
+            <h1 class="h2 mt-2" id="detail-nama"></h1>
+
+            <dl class="row mt-3">
+              <dt class="col-sm-4">Pengajar</dt>
+              <dd class="col-sm-8" id="detail-pengajar"></dd>
+              <dt class="col-sm-4">Jadwal</dt>
+              <dd class="col-sm-8" id="detail-jadwal"></dd>
+              <dt class="col-sm-4">Lokasi</dt>
+              <dd class="col-sm-8" id="detail-lokasi"></dd>
+              <dt class="col-sm-4">Penanggung jawab pendaftaran</dt>
+              <dd class="col-sm-8" id="detail-pj"></dd>
+            </dl>
+
+            <h2 class="h5">Tentang kelas ini</h2>
+            <p id="detail-deskripsi"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="card shadow-sm">
+          <div class="card-body p-4">
+            <h2 class="h5">Kuota Kursi</h2>
+            <p class="mb-1">Tersisa <strong id="detail-sisa">0</strong> dari <strong id="detail-kuota">0</strong> kursi</p>
+            <div class="progress mb-3">
+              <div id="detail-bar" class="progress-bar" style="width: 0%"></div>
+            </div>
+            <button type="button" id="tombol-daftar" class="btn btn-primary w-100">Daftar Kelas</button>
+            <p class="small text-muted mt-2 mb-0">Setelah mendaftar, statusmu Menunggu sampai penanggung jawab menerimanya.</p>
+
+            <h3 class="h6 mt-4">Peserta terdaftar</h3>
+            <ul id="detail-peserta"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="border-top bg-light text-center text-muted py-3 mt-5">
+    &copy; 2026 SkillShare Campus &middot; Proyek UTS Pemrograman Web
+  </footer>
+
+  <!-- Bootstrap JS (supaya tombol menu di layar kecil berfungsi) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- ===== JavaScript khusus halaman ini ===== -->
+  <script>
+    siapkanNavbar();
+
+    // Nomor kelas diambil dari alamat. Contoh: detail.html?id=2  ->  2
+    const idKelas = Number(window.location.search.replace('?id=', ''));
+    const kelas = cariKelas(idKelas);
+
+    // Tampilkan info kelas, kuota, tombol daftar, dan daftar peserta
+    function tampilkanDetail() {
+      const sisa = sisaKuota(kelas);
+      const terisi = hitungPendaftar(kelas.id);
+      const persen = Math.round((terisi / kelas.kuota) * 100);
+
+      document.getElementById('detail-kategori').textContent = ikonKategori(kelas.kategori) + ' ' + kelas.kategori;
+      document.getElementById('detail-nama').textContent = kelas.nama;
+      document.getElementById('detail-pengajar').textContent = kelas.pengajar;
+      document.getElementById('detail-jadwal').textContent = kelas.jadwal;
+      document.getElementById('detail-lokasi').textContent = kelas.lokasi;
+      document.getElementById('detail-pj').textContent = teksPJ(kelas.kategori);
+      document.getElementById('detail-deskripsi').textContent = kelas.deskripsi;
+      document.title = kelas.nama + ' | SkillShare Campus';
+
+      document.getElementById('detail-sisa').textContent = sisa;
+      document.getElementById('detail-kuota').textContent = kelas.kuota;
+      document.getElementById('detail-bar').style.width = persen + '%';
+
+      // Daftar peserta kelas ini. Sekalian cari apakah kita sudah terdaftar.
+      const semuaPendaftaran = ambilPendaftaran();
+      let sudahDaftar = false;
+      let statusSaya = '';
+      let htmlPeserta = '';
+      for (let i = 0; i < semuaPendaftaran.length; i++) {
+        const p = semuaPendaftaran[i];
+        if (p.idKelas === kelas.id) {
+          htmlPeserta += '<li>' + esc(p.nama) + ' ' + badgeStatus(p.status) + '</li>';
+          if (p.nama === ambilUser()) {
+            sudahDaftar = true;
+            statusSaya = p.status;
+          }
+        }
+      }
+      if (htmlPeserta === '') {
+        htmlPeserta = '<li>Belum ada peserta.</li>';
+      }
+      document.getElementById('detail-peserta').innerHTML = htmlPeserta;
+
+      // Tombol daftar: aktif, atau mati kalau sudah daftar / kuota penuh
+      const tombol = document.getElementById('tombol-daftar');
+      if (sudahDaftar) {
+        tombol.disabled = true;
+        tombol.textContent = 'Kamu sudah terdaftar (' + statusSaya + ')';
+      } else if (sisa <= 0) {
+        tombol.disabled = true;
+        tombol.textContent = 'Kuota penuh';
+      } else {
+        tombol.disabled = false;
+        tombol.textContent = 'Daftar Kelas';
+      }
+    }
+
+    if (kelas === null) {
+      // Alamat salah atau kelas tidak ada: kembali ke Daftar Kelas
+      alert('Kelas tidak ditemukan.');
+      window.location.href = 'kelas.html';
+    } else {
+      tampilkanDetail();
+
+      // Saat tombol Daftar Kelas ditekan
+      document.getElementById('tombol-daftar').addEventListener('click', function () {
+        const semuaPendaftaran = ambilPendaftaran();
+        semuaPendaftaran.push({
+          id: semuaPendaftaran.length + 1,
+          idKelas: kelas.id,
+          nama: ambilUser(),
+          tanggal: tanggalHariIni(),
+          status: 'Menunggu'          // baru mendaftar = Menunggu, nanti diterima penanggung jawab
+        });
+        simpanPendaftaran(semuaPendaftaran);
+
+        alert('Pendaftaran berhasil! Statusmu: Menunggu.\nHubungi penanggung jawab: ' + teksPJ(kelas.kategori));
+        tampilkanDetail();
+      });
+    }
+  </script>
+</body>
+</html>
