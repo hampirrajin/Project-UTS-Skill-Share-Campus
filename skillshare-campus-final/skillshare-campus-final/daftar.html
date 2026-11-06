@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Daftar Akun | SkillShare Campus</title>
+
+  <!-- Bootstrap CSS (lewat CDN, tidak perlu instalasi) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- CSS tambahan milik kita -->
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- JavaScript bersama (data dan fungsi yang dipakai semua halaman) -->
+  <script src="js/script.js"></script>
+</head>
+
+<body class="bg-light">
+
+  <main class="container py-5">
+    <!-- ===== HALAMAN DAFTAR AKUN (Anggota 1) ===== -->
+    <div class="row justify-content-center">
+      <div class="col-md-6 col-lg-4">
+        <div class="card shadow-sm">
+          <div class="card-body p-4">
+            <p class="fw-bold text-primary mb-1">SKILLSHARE CAMPUS</p>
+            <h1 class="h2 mb-3">Daftar Akun</h1>
+
+            <div id="pesan-error" class="alert alert-danger" style="display: none"></div>
+
+            <form id="form-daftar" novalidate>
+              <div class="mb-3">
+                <label for="nama" class="form-label">Nama pengguna</label>
+                <input type="text" class="form-control" id="nama">
+              </div>
+              <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email">
+              </div>
+              <div class="mb-3">
+                <label for="sandi" class="form-label">Kata sandi</label>
+                <input type="password" class="form-control" id="sandi">
+              </div>
+              <div class="mb-3">
+                <label for="konfirmasi" class="form-label">Konfirmasi kata sandi</label>
+                <input type="password" class="form-control" id="konfirmasi">
+              </div>
+              <button type="submit" class="btn btn-primary w-100">Daftar</button>
+            </form>
+
+            <p class="mt-3 mb-0 text-center">Sudah punya akun? <a href="login.html">Login di sini</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===== JavaScript khusus halaman ini ===== -->
+  <script>
+    // Kalau sudah login, tidak perlu daftar lagi
+    if (ambilUser() !== null) {
+      window.location.href = 'index.html';
+    }
+
+    // Saat tombol Daftar ditekan
+    document.getElementById('form-daftar').addEventListener('submit', function (event) {
+      event.preventDefault();
+      sembunyikanError();
+
+      const nama = document.getElementById('nama').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const sandi = document.getElementById('sandi').value;
+      const konfirmasi = document.getElementById('konfirmasi').value;
+
+      // Cek isian satu per satu. Kalau ada yang salah, tampilkan pesan lalu berhenti.
+      if (nama.length < 3) {
+        tampilkanError('Nama pengguna minimal 3 karakter.');
+        return;
+      }
+      if (email.includes('@') === false || email.includes('.') === false) {
+        tampilkanError('Masukkan email yang valid, contoh: nama@kampus.ac.id');
+        return;
+      }
+      if (sandi.length < 6) {
+        tampilkanError('Kata sandi minimal 6 karakter.');
+        return;
+      }
+      if (sandi !== konfirmasi) {
+        tampilkanError('Konfirmasi kata sandi tidak sama.');
+        return;
+      }
+
+      // Cek apakah nama pengguna sudah dipakai
+      const semuaAkun = ambilAkun();
+      for (let i = 0; i < semuaAkun.length; i++) {
+        if (semuaAkun[i].nama.toLowerCase() === nama.toLowerCase()) {
+          tampilkanError('Nama pengguna sudah dipakai.');
+          return;
+        }
+      }
+
+      // Semua benar: simpan akun baru
+      semuaAkun.push({ nama: nama, email: email, sandi: sandi });
+      simpanAkun(semuaAkun);
+
+      alert('Akun berhasil dibuat. Silakan login.');
+      window.location.href = 'login.html';
+    });
+  </script>
+</body>
+</html>
