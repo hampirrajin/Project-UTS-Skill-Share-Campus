@@ -1,0 +1,24 @@
+/* =====================================================================
+   css/style.css  -  CSS tambahan kecil (di luar Bootstrap)
+   Pemilik: Anggota 1
+   ===================================================================== */
+
+/* Latar biru gelap ke biru di bagian atas Beranda */
+.hero {
+  background: linear-gradient(135deg, #0B1B4D, #2563EB);
+}
+
+/* Emoji besar di kartu */
+.ikon-besar {
+  font-size: 3rem;
+}
+
+/* Footer selalu di bagian bawah layar walaupun isi halaman pendek */
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+main {
+  flex: 1 0 auto;
+}
